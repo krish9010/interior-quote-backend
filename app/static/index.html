@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Interior Design Quotation</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tabler-icons/2.47.0/iconfont/tabler-icons.min.css">
+<style>
+  :root {
+    --ink:#22303F; --ink-soft:rgba(34,48,63,0.7);
+    --paper:#F2EEE6; --paper2:#FFFFFF; --paper3:#F8F6F0;
+    --brass:#D9A54B; --brass-dark:#B8863B;
+    --muted:#8C8878; --line:rgba(34,48,63,0.22); --line-strong:rgba(34,48,63,0.4);
+    --danger:#A35959;
+    --font-voice: Georgia, 'Times New Roman', serif;
+  }
+  * { box-sizing: border-box; }
+  body { font-family: -apple-system, Segoe UI, Roboto, Arial, sans-serif; max-width: 720px; margin: 0 auto; padding: 0 0 100px; color: var(--ink); background: var(--paper); }
+  h1,h2 { font-family: var(--font-voice); font-weight: normal; }
+  .muted { color: var(--muted); font-size: 13px; }
+  .wrap { padding: 20px 18px; }
+  .card { background: var(--paper2); border: 1px solid var(--line); border-radius: 8px; padding: 14px 16px; margin-bottom: 12px; }
+  label { display: block; font-size: 11px; color: var(--brass-dark); letter-spacing: 0.02em; margin: 6px 0 4px; }
+  input, select, textarea { width: 100%; padding: 8px 10px; border: 1px solid var(--line); border-radius: 5px; font-size: 13px; background: var(--paper3); color: var(--ink); }
+  .row { display: flex; gap: 10px; }
+  .row > div { flex: 1; }
+  button { background: transparent; color: var(--ink); border: 1px solid var(--line-strong); padding: 9px 14px; border-radius: 5px; font-size: 13px; cursor: pointer; }
+  button.primary { background: var(--ink); color: var(--paper3); border: none; }
+  button.brass { background: var(--brass); color: var(--ink); border: none; font-weight: 500; }
+  button.ghost { border: 1px dashed var(--line-strong); background: transparent; width: 100%; }
+  button.danger-text { border: none; color: var(--danger); font-size: 12px; padding: 4px 8px; }
+  .section-label { font-size: 11px; color: var(--brass-dark); letter-spacing: 0.03em; margin: 18px 0 8px; }
+
+  /* Floor plan */
+  #floorplanViz { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 14px; min-height: 70px; }
+  .fp-tile { min-height: 40px; border: 1.5px solid var(--line-strong); border-radius: 4px; display: flex; flex-direction: column; justify-content: center; align-items: center; transition: background 0.35s, border-color 0.35s, width 0.35s, height 0.35s; padding: 4px; overflow: hidden; }
+  .fp-tile .fp-name { font-size: 12px; color: var(--ink); }
+  .fp-tile .fp-sub { font-size: 10px; color: var(--muted); margin-top: 2px; }
+  .fp-empty { flex: 1 1 100%; text-align: center; color: var(--muted); font-size: 12px; padding: 20px; border: 1.5px dashed var(--line); border-radius: 4px; }
+
+  /* Module accordion */
+  .module { border: 1px solid var(--line); border-radius: 6px; margin-bottom: 8px; overflow: hidden; background: var(--paper2); }
+  .module-header { display: flex; justify-content: space-between; align-items: center; padding: 10px 12px; cursor: pointer; }
+  .module-header .mh-left { display: flex; align-items: center; gap: 8px; }
+  .module-header input.room-name { border: none; background: transparent; font-size: 14px; padding: 2px; width: auto; flex: 1; }
+  .module-header .mh-total { font-size: 13px; color: var(--brass-dark); font-weight: 500; white-space: nowrap; }
+  .module-body { padding: 4px 12px 12px; border-top: 1px solid var(--line); display: none; }
+  .module.expanded .module-body { display: block; }
+  .module.expanded .chevron { transform: rotate(90deg); }
+  .chevron { transition: transform 0.2s; color: var(--muted); font-size: 16px; }
+  .dims-row { display: flex; gap: 8px; margin: 10px 0; }
+  .dims-row input { width: 70px; flex: none; }
+  .item-row { display: flex; gap: 6px; align-items: center; margin-bottom: 5px; }
+  .item-row select { flex: 2; font-size: 12px; }
+  .item-row input { flex: 1; font-size: 12px; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th, td { text-align: left; padding: 5px 6px; border-bottom: 1px solid var(--line); }
+  th { color: var(--muted); font-weight: 500; font-size: 11px; }
+
+  .quote-row { display:flex; justify-content:space-between; align-items:center; border:1px solid var(--line); border-radius:6px; padding:10px 12px; margin-bottom:8px; background: var(--paper2); }
+
+  /* Sticky total bar */
+  #stickyBar { position: fixed; bottom: 0; left: 0; right: 0; background: var(--ink); padding: 12px 18px; display: flex; justify-content: space-between; align-items: center; max-width: 720px; margin: 0 auto; }
+  #stickyBar .sb-label { font-size: 10px; color: #93A0AF; }
+  #stickyBar .sb-total { font-family: var(--font-voice); font-size: 20px; color: var(--brass); margin-top: 2px; }
+  #stickyBar .sb-actions { display: flex; gap: 8px; }
+  #stickyBar button.primary { background: var(--brass); color: var(--ink); }
+
+  #chatWidget, #resultCard { display: none; }
+  #chatLog .msg { font-size: 13px; margin-bottom: 8px; padding: 8px 10px; border-radius: 6px; background: var(--paper3); }
+  #chatLog .msg.user { background: var(--brass); color: var(--ink); }
+  #proposalText { white-space: pre-wrap; font-family: var(--font-voice); font-size: 14px; line-height: 1.6; background: var(--paper3); padding: 12px; border-radius: 6px; margin-top: 10px; }
+</style>
+</head>
+<body>
+
+<div id="authGate" class="wrap" style="text-align:center; padding-top:60px;">
+  <h1 style="margin-bottom:6px;">Interior design quotation</h1>
+  <p class="muted" id="authStatus">Checking sign-in status...</p>
+  <button class="primary" id="loginBtn" style="display:none; margin-top:14px;">Sign in with Microsoft</button>
+</div>
+
+<div id="appContent" style="display:none;">
+  <div class="wrap" style="padding-bottom:8px;">
+    <div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:4px;">
+      <h1 style="font-size:20px; margin:0;">Interior quotation</h1>
+      <div style="text-align:right; font-size:11px;">
+        <span id="userLabel" class="muted"></span><br/>
+        <a href="/auth/logout" style="font-size:11px; color:var(--muted);">Sign out</a>
+      </div>
+    </div>
+    <div style="height:2px; background:var(--ink); margin-bottom:16px;"></div>
+  </div>
+
+  <div id="clientView" class="wrap" style="display:none;">
+    <p class="muted">Quotations linked to your account.</p>
+    <div id="clientQuotationsList"></div>
+  </div>
+
+  <div id="staffBuilder" class="wrap" style="display:none;">
+
+    <div class="card">
+      <label>Client name</label>
+      <input id="clientName" placeholder="e.g. Rahul Sharma" />
+      <div class="row">
+        <div><label>Phone</label><input id="clientPhone" placeholder="98765 43210" /></div>
+        <div><label>Email (must match their sign-in email)</label><input id="clientEmail" placeholder="client@example.com" /></div>
+      </div>
+      <label>Address</label>
+      <input id="clientAddress" placeholder="flat / project address" />
+    </div>
+
+    <div class="card">
+      <label>Floor plan reference (optional)</label>
+      <input type="file" id="floorplanFile" accept=".png,.jpg,.jpeg,.pdf,.webp" />
+      <p class="muted" id="uploadStatus" style="margin:4px 0;"></p>
+      <button id="extractBtn" type="button" style="margin-top:4px;"><i class="ti ti-sparkles" aria-hidden="true"></i> Read measurements with AI</button>
+      <p class="muted" id="extractStatus"></p>
+    </div>
+
+    <div class="card">
+      <label>Describe a room for AI item suggestions</label>
+      <div class="row">
+        <div style="flex:3"><input id="aiDescription" placeholder="e.g. cozy master bedroom with a reading nook" /></div>
+        <div style="flex:1"><button id="suggestBtn" type="button">✨ Suggest</button></div>
+      </div>
+      <p class="muted" id="suggestStatus"></p>
+    </div>
+
+    <p class="section-label">Floor plan</p>
+    <div id="floorplanViz"><div class="fp-empty">Add a module below to see it appear here</div></div>
+
+    <p class="section-label">Modules</p>
+    <div class="row" style="align-items:flex-end; margin-bottom:10px;">
+      <div><label>Select module</label><select id="modulePreset"></select></div>
+      <div style="flex:0 0 auto;"><button id="addModuleBtn" type="button">+ Add</button></div>
+    </div>
+    <div id="roomsContainer"></div>
+
+    <p class="section-label">Discount &amp; tax</p>
+    <div class="card">
+      <div class="row">
+        <div><label>Discount %</label><input type="number" id="discountPercent" value="0" step="0.5" /></div>
+        <div><label>Tax %</label><input type="number" id="taxPercent" value="18" step="0.5" /></div>
+      </div>
+      <label>Notes</label>
+      <textarea id="notes" rows="2" placeholder="optional notes for the quotation"></textarea>
+    </div>
+
+    <div id="resultCard" class="card">
+      <h2 style="font-size:16px; margin-top:0;">Quotation generated</h2>
+      <p class="muted" id="resultMeta"></p>
+      <div class="row">
+        <div><button id="downloadPdfBtn" type="button" style="width:100%;"><i class="ti ti-download" aria-hidden="true"></i> Download PDF</button></div>
+        <div><button id="proposalBtn" type="button" style="width:100%;"><i class="ti ti-sparkles" aria-hidden="true"></i> Write proposal</button></div>
+      </div>
+      <p id="proposalText" style="display:none;"></p>
+    </div>
+
+  </div>
+
+  <div id="chatWidget" class="wrap card">
+    <h2 style="font-size:15px; margin-top:0;">Ask about this quotation</h2>
+    <div id="chatLog"></div>
+    <div class="row">
+      <div style="flex:3"><input id="chatInput" placeholder="e.g. why is the kitchen module the most expensive?" /></div>
+      <div style="flex:1"><button id="chatSendBtn" type="button">Ask</button></div>
+    </div>
+  </div>
+
+  <div id="stickyBar" style="display:none;">
+    <div>
+      <p class="sb-label" id="sbLabel">Live total</p>
+      <p class="sb-total" id="sbTotal">₹0</p>
+    </div>
+    <div class="sb-actions">
+      <button class="primary" id="generateBtn">Generate quote</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const ROOM_COLORS = {
+  kitchen: '#C08A3E', bedroom: '#5B7355', bathroom: '#A35959',
+  living_room: '#3E6B8C', dining_room: '#8C6E4B', study_room: '#6B5B95',
+  pooja_room: '#B08D57', balcony: '#5C8374', utility_room: '#7D7463', custom: '#8C8878',
+};
+
+let catalog = { per_sqft: {}, fixed: {} };
+let roomCount = 0;
+let uploadedFileId = null;
+let currentQuotationId = null;
+let currentUser = null;
+
+async function checkAuth() {
+  const res = await fetch('/auth/me');
+  const data = await res.json();
+  currentUser = data.user;
+
+  if (!data.sso_configured) {
+    document.getElementById('authStatus').textContent = 'Azure AD sign-in is not configured yet. See the README.';
+    return;
+  }
+  if (!currentUser) {
+    document.getElementById('authStatus').textContent = 'Please sign in to continue.';
+    document.getElementById('loginBtn').style.display = 'inline-block';
+    document.getElementById('loginBtn').onclick = () => { window.location.href = '/auth/login'; };
+    return;
+  }
+
+  document.getElementById('authGate').style.display = 'none';
+  document.getElementById('appContent').style.display = 'block';
+  document.getElementById('userLabel').textContent = `${currentUser.name} (${currentUser.role})`;
+
+  if (currentUser.role === 'staff') {
+    document.getElementById('staffBuilder').style.display = 'block';
+    document.getElementById('stickyBar').style.display = 'flex';
+    loadCatalog();
+  } else {
+    document.getElementById('clientView').style.display = 'block';
+    loadClientQuotations();
+  }
+}
+
+async function loadClientQuotations() {
+  const res = await fetch('/api/my-quotations');
+  const list = await res.json();
+  const container = document.getElementById('clientQuotationsList');
+  if (list.length === 0) {
+    container.innerHTML = '<p class="muted">No quotations found for your account yet.</p>';
+    return;
+  }
+  container.innerHTML = list.map(q => `
+    <div class="quote-row">
+      <div>
+        <strong>Quotation #${q.id.slice(0,8)}</strong>
+        <div class="muted">Grand total: ₹${q.grand_total.toFixed(2)}</div>
+      </div>
+      <div>
+        <button onclick="window.open('/api/quotation/${q.id}/pdf','_blank')">PDF</button>
+        <button onclick="openChat('${q.id}')">Ask</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function openChat(quotationId) {
+  currentQuotationId = quotationId;
+  document.getElementById('chatWidget').style.display = 'block';
+  document.getElementById('chatLog').innerHTML = '';
+  document.getElementById('chatWidget').scrollIntoView({ behavior: 'smooth' });
+}
+
+async function loadCatalog() {
+  const res = await fetch('/api/catalog');
+  catalog = await res.json();
+  populateModuleDropdown();
+  addRoom('bedroom');
+  recalc();
+}
+
+function populateModuleDropdown() {
+  const select = document.getElementById('modulePreset');
+  select.innerHTML = Object.entries(catalog.module_presets || {})
+    .map(([key, val]) => `<option value="${key}">${val.label}</option>`).join('');
+}
+
+function categoryOptions() {
+  let opts = '<option value="">Select item...</option><optgroup label="Per sq.ft">';
+  for (const [key, val] of Object.entries(catalog.per_sqft)) {
+    opts += `<option value="${key}">${val.label} (₹${val.rate}/${val.unit})</option>`;
+  }
+  opts += '</optgroup><optgroup label="Fixed items">';
+  for (const [key, val] of Object.entries(catalog.fixed)) {
+    opts += `<option value="${key}">${val.label} (₹${val.rate}/${val.unit})</option>`;
+  }
+  return opts + '</optgroup>';
+}
+
+function addRoom(presetKey) {
+  roomCount++;
+  const id = roomCount;
+  const preset = (catalog.module_presets || {})[presetKey];
+  const defaultName = preset ? preset.label : 'Room';
+  const defaultItems = preset ? preset.default_items : [];
+
+  const div = document.createElement('div');
+  div.className = 'module expanded';
+  div.id = `room-${id}`;
+  div.dataset.presetKey = presetKey || 'custom';
+  div.innerHTML = `
+    <div class="module-header" onclick="toggleModule(${id}, event)">
+      <div class="mh-left">
+        <i class="ti ti-chevron-right chevron" aria-hidden="true"></i>
+        <input class="room-name" value="${defaultName}" onclick="event.stopPropagation()" oninput="recalc()" />
+      </div>
+      <span class="mh-total" id="room-${id}-total">₹0</span>
+    </div>
+    <div class="module-body">
+      <div class="dims-row">
+        <div><label>Length ft</label><input type="number" class="room-length" step="0.1" oninput="recalc()" /></div>
+        <div><label>Width ft</label><input type="number" class="room-width" step="0.1" oninput="recalc()" /></div>
+        <div style="flex:1; display:flex; align-items:flex-end;"><span class="muted" id="room-${id}-area">0 sq.ft</span></div>
+      </div>
+      <div class="items-container"></div>
+      <button type="button" onclick="addItemRow(${id})" style="margin-top:4px;">+ Add item</button>
+      <div style="text-align:right; margin-top:6px;">
+        <button class="danger-text" type="button" onclick="document.getElementById('room-${id}').remove(); recalc();">Remove module</button>
+      </div>
+    </div>
+  `;
+  document.getElementById('roomsContainer').appendChild(div);
+
+  if (defaultItems.length > 0) {
+    defaultItems.forEach(cat => addItemRow(id, cat));
+  } else {
+    addItemRow(id);
+  }
+  recalc();
+}
+
+function toggleModule(id, evt) {
+  if (evt.target.tagName === 'INPUT') return;
+  document.getElementById(`room-${id}`).classList.toggle('expanded');
+}
+
+function addItemRow(roomId, preselectedCategory) {
+  const container = document.querySelector(`#room-${roomId} .items-container`);
+  const row = document.createElement('div');
+  row.className = 'item-row';
+  row.innerHTML = `
+    <select class="item-category" onchange="recalc()">${categoryOptions()}</select>
+    <input type="number" class="item-qty" placeholder="qty (blank=area)" step="0.1" oninput="recalc()" />
+    <button class="danger-text" type="button" onclick="this.parentElement.remove(); recalc();">✕</button>
+  `;
+  container.appendChild(row);
+  if (preselectedCategory) row.querySelector('.item-category').value = preselectedCategory;
+}
+
+document.getElementById('addModuleBtn').onclick = () => addRoom(document.getElementById('modulePreset').value);
+
+function rateFor(category) {
+  if (catalog.per_sqft[category]) return { ...catalog.per_sqft[category], kind: 'per_sqft' };
+  if (catalog.fixed[category]) return { ...catalog.fixed[category], kind: 'fixed' };
+  return null;
+}
+
+function recalc() {
+  let subtotal = 0;
+  const fpTiles = [];
+
+  document.querySelectorAll('.module').forEach(block => {
+    const id = block.id.split('-')[1];
+    const length = parseFloat(block.querySelector('.room-length').value || 0);
+    const width = parseFloat(block.querySelector('.room-width').value || 0);
+    const area = Math.round(length * width * 100) / 100;
+    const name = block.querySelector('.room-name').value || 'Room';
+    document.getElementById(`room-${id}-area`).textContent = `${area} sq.ft`;
+
+    let roomTotal = 0;
+    block.querySelectorAll('.item-row').forEach(row => {
+      const category = row.querySelector('.item-category').value;
+      const rate = rateFor(category);
+      if (!rate) return;
+      let qty = parseFloat(row.querySelector('.item-qty').value);
+      if (isNaN(qty)) qty = rate.kind === 'per_sqft' ? area : 0;
+      roomTotal += qty * rate.rate;
+    });
+    roomTotal = Math.round(roomTotal * 100) / 100;
+    document.getElementById(`room-${id}-total`).textContent = `₹${roomTotal.toLocaleString('en-IN')}`;
+    subtotal += roomTotal;
+
+    const presetKey = block.dataset.presetKey || 'custom';
+    fpTiles.push({ name, length, width, area, total: roomTotal, color: ROOM_COLORS[presetKey] || ROOM_COLORS.custom });
+  });
+
+  renderFloorplan(fpTiles);
+
+  const discountPct = parseFloat(document.getElementById('discountPercent').value || 0);
+  const taxPct = parseFloat(document.getElementById('taxPercent').value || 0);
+  const discountAmt = subtotal * (discountPct / 100);
+  const taxable = subtotal - discountAmt;
+  const taxAmt = taxable * (taxPct / 100);
+  const grandTotal = Math.round((taxable + taxAmt) * 100) / 100;
+
+  const totalEl = document.getElementById('sbTotal');
+  totalEl.textContent = `₹${grandTotal.toLocaleString('en-IN')}`;
+  totalEl.style.transform = 'scale(1.06)';
+  setTimeout(() => { totalEl.style.transform = 'scale(1)'; }, 150);
+}
+
+function renderFloorplan(tiles) {
+  const el = document.getElementById('floorplanViz');
+  const valid = tiles.filter(t => t.length > 0 && t.width > 0);
+  if (valid.length === 0) {
+    el.innerHTML = '<div class="fp-empty">Add a module with dimensions to see it appear here</div>';
+    return;
+  }
+  // Draw every room to the same feet-to-pixel scale, so box size reflects
+  // real length x width -- not just cost or area share.
+  const containerWidth = el.clientWidth || 320;
+  const maxDimFt = Math.max(...valid.map(t => Math.max(t.length, t.width)));
+  const scale = Math.max(5, Math.min(20, containerWidth / maxDimFt));
+
+  el.innerHTML = valid.map(t => {
+    const w = Math.round(t.length * scale);
+    const h = Math.round(t.width * scale);
+    const bg = t.total > 0 ? `${t.color}22` : 'transparent';
+    const border = t.total > 0 ? t.color : 'var(--line-strong)';
+    return `<div class="fp-tile" style="width:${w}px; height:${h}px; flex-grow:0; background:${bg}; border-color:${border};">
+      <span class="fp-name">${t.name}</span>
+      <span class="fp-sub">${t.length}&#39;&times;${t.width}&#39; &middot; ₹${t.total.toLocaleString('en-IN')}</span>
+    </div>`;
+  }).join('');
+}
+
+document.getElementById('floorplanFile').addEventListener('change', async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const formData = new FormData();
+  formData.append('file', file);
+  document.getElementById('uploadStatus').textContent = 'Uploading...';
+  try {
+    const res = await fetch('/api/floorplan/upload', { method: 'POST', body: formData });
+    if (!res.ok) throw new Error((await res.json()).detail || 'Upload failed');
+    const data = await res.json();
+    uploadedFileId = data.file_id;
+    document.getElementById('uploadStatus').textContent = `Attached: ${data.filename}`;
+  } catch (err) {
+    document.getElementById('uploadStatus').textContent = `Error: ${err.message}`;
+  }
+});
+
+document.getElementById('extractBtn').onclick = async () => {
+  const file = document.getElementById('floorplanFile').files[0];
+  if (!file) { document.getElementById('extractStatus').textContent = 'Attach an image first.'; return; }
+  document.getElementById('extractStatus').textContent = 'Reading floor plan...';
+  const formData = new FormData();
+  formData.append('file', file);
+  try {
+    const res = await fetch('/api/floorplan/extract', { method: 'POST', body: formData });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || 'Extraction failed');
+    (data.rooms || []).forEach(r => {
+      addRoom(r.module_key || 'custom');
+      const block = document.querySelector('#roomsContainer .module:last-child');
+      block.querySelector('.room-name').value = r.name || 'Room';
+      block.querySelector('.room-length').value = r.length_ft || '';
+      block.querySelector('.room-width').value = r.width_ft || '';
+    });
+    recalc();
+    document.getElementById('extractStatus').textContent = data.notes || `Added ${(data.rooms||[]).length} room(s). Review before generating.`;
+  } catch (err) {
+    document.getElementById('extractStatus').textContent = `Error: ${err.message}`;
+  }
+};
+
+document.getElementById('suggestBtn').onclick = async () => {
+  const description = document.getElementById('aiDescription').value.trim();
+  if (!description) return;
+  document.getElementById('suggestStatus').textContent = 'Thinking...';
+  try {
+    const res = await fetch('/api/ai/suggest-items', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ description }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || 'Suggestion failed');
+    const lastRoom = document.querySelector('#roomsContainer .module:last-child');
+    if (lastRoom) {
+      const id = lastRoom.id.split('-')[1];
+      (data.suggested_categories || []).forEach(cat => addItemRow(id, cat));
+      recalc();
+    }
+    document.getElementById('suggestStatus').textContent = data.reasoning || 'Added to the last module.';
+  } catch (err) {
+    document.getElementById('suggestStatus').textContent = `Error: ${err.message}`;
+  }
+};
+
+function collectRooms() {
+  const rooms = [];
+  document.querySelectorAll('.module').forEach(block => {
+    const name = block.querySelector('.room-name').value || 'Room';
+    const length_ft = parseFloat(block.querySelector('.room-length').value || 0);
+    const width_ft = parseFloat(block.querySelector('.room-width').value || 0);
+    const items = [];
+    block.querySelectorAll('.item-row').forEach(row => {
+      const category = row.querySelector('.item-category').value;
+      const qtyRaw = row.querySelector('.item-qty').value;
+      if (!category) return;
+      items.push({ category, quantity: qtyRaw === '' ? null : parseFloat(qtyRaw) });
+    });
+    if (length_ft > 0 && width_ft > 0) rooms.push({ name, length_ft, width_ft, items });
+  });
+  return rooms;
+}
+
+document.getElementById('generateBtn').onclick = async () => {
+  const rooms = collectRooms();
+  if (rooms.length === 0) { alert('Add at least one module with valid length and width.'); return; }
+
+  const payload = {
+    client: {
+      name: document.getElementById('clientName').value || 'Client',
+      phone: document.getElementById('clientPhone').value || null,
+      email: document.getElementById('clientEmail').value || null,
+      address: document.getElementById('clientAddress').value || null,
+    },
+    rooms,
+    discount_percent: parseFloat(document.getElementById('discountPercent').value || 0),
+    tax_percent: parseFloat(document.getElementById('taxPercent').value || 0),
+    floorplan_file_id: uploadedFileId,
+    notes: document.getElementById('notes').value || null,
+  };
+
+  const res = await fetch('/api/quotation', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload),
+  });
+  if (!res.ok) { alert('Failed to generate quotation.'); return; }
+  const data = await res.json();
+  currentQuotationId = data.id;
+  document.getElementById('resultMeta').textContent = `Quotation #${data.id.slice(0,8)} — grand total ₹${data.grand_total.toLocaleString('en-IN')}`;
+  document.getElementById('resultCard').style.display = 'block';
+  document.getElementById('resultCard').scrollIntoView({ behavior: 'smooth' });
+};
+
+document.getElementById('downloadPdfBtn').onclick = () => {
+  if (currentQuotationId) window.open(`/api/quotation/${currentQuotationId}/pdf`, '_blank');
+};
+
+document.getElementById('proposalBtn').onclick = async () => {
+  if (!currentQuotationId) return;
+  const el = document.getElementById('proposalText');
+  el.style.display = 'block';
+  el.textContent = 'Writing...';
+  try {
+    const res = await fetch(`/api/quotation/${currentQuotationId}/proposal`);
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || 'Failed');
+    el.textContent = data.proposal;
+  } catch (err) {
+    el.textContent = `Error: ${err.message}`;
+  }
+};
+
+document.getElementById('chatSendBtn').onclick = async () => {
+  const input = document.getElementById('chatInput');
+  const question = input.value.trim();
+  if (!question || !currentQuotationId) return;
+  const log = document.getElementById('chatLog');
+  log.innerHTML += `<div class="msg user">${question}</div>`;
+  input.value = '';
+  const thinking = document.createElement('div');
+  thinking.className = 'msg';
+  thinking.textContent = 'Thinking...';
+  log.appendChild(thinking);
+  try {
+    const res = await fetch(`/api/quotation/${currentQuotationId}/chat`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ question }),
+    });
+    const data = await res.json();
+    thinking.textContent = res.ok ? data.answer : `Error: ${data.detail}`;
+  } catch (err) {
+    thinking.textContent = `Error: ${err.message}`;
+  }
+};
+
+checkAuth();
+</script>
+
+</body>
+</html>
